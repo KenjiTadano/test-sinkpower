@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## 自己署名証明書の作成（HTTPS 用）
 
-## Getting Started
+mkdir cert
+openssl req -x509 -newkey rsa:2048 -nodes -keyout cert/key.pem -out cert/cert.pem -days 365
 
-First, run the development server:
+•	Common Name は localhost
+できるファイル：
+cert/
+├── localhost-key.pem     ← 鍵
+└── localhost-cert.pem    ← 証明書
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+##next.config.js の設定（HTTPS アクセス許可）
+/\*_ @type {import('next').NextConfig} _/
+const nextConfig = {
+reactStrictMode: true,
+experimental: {
+appDir: true
+}
+};
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+module.exports = nextConfig;
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+##環境変数の設定（.env.local）
+NEXT_PUBLIC_CLIENT_ID=rakutenmusic
+NEXT_PUBLIC_CLIENT_SECRET=1aed621ca6270d9488b0f411fdb590af74047b73e0c6639b037c05a2128cfcb2
+NEXT_PUBLIC_AUTH_URL=https://md.syncpower.jp/authenticate/v1/token
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+##HTTPS 用ローカルサーバー（server.js）
+// server.js
 
-## Learn More
+const { createServer } = require('https');
+const { parse } = require('url');
+const next = require('next');
+const fs = require('fs');
 
-To learn more about Next.js, take a look at the following resources:
+const dev = process.env.NODE_ENV !== 'production';
+const app = next({ dev });
+const handle = app.getRequestHandler();
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+// 証明書を読み込み
+const httpsOptions = {
+key: fs.readFileSync('./cert/key.pem'),
+cert: fs.readFileSync('./cert/cert.pem')
+};
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+app.prepare().then(() => {
+createServer(httpsOptions, (req, res) => {
+const parsedUrl = parse(req.url, true);
+handle(req, res, parsedUrl);
+}).listen(3000, err => {
+if (err) throw err;
+console.log('> Ready on https://localhost:3000');
+});
+});
 
-## Deploy on Vercel
+##起動方法
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# 必要なパッケージをインストール
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+npm install
+
+# 開発サーバー起動（https 対応）
+
+node server.js
