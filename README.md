@@ -3,11 +3,11 @@
 mkdir cert
 openssl req -x509 -newkey rsa:2048 -nodes -keyout cert/key.pem -out cert/cert.pem -days 365
 
-•	Common Name は localhost
+• Common Name は localhost
 できるファイル：
 cert/
-├── localhost-key.pem     ← 鍵
-└── localhost-cert.pem    ← 証明書
+├── localhost-key.pem ← 鍵
+└── localhost-cert.pem ← 証明書
 
 ##next.config.js の設定（HTTPS アクセス許可）
 /\*_ @type {import('next').NextConfig} _/
@@ -23,7 +23,7 @@ module.exports = nextConfig;
 ##環境変数の設定（.env.local）
 NEXT_PUBLIC_CLIENT_ID=rakutenmusic
 NEXT_PUBLIC_CLIENT_SECRET=1aed621ca6270d9488b0f411fdb590af74047b73e0c6639b037c05a2128cfcb2
-NEXT_PUBLIC_AUTH_URL=https://md.syncpower.jp/authenticate/v1/token
+NEXT_PUBLIC_API_TARGET=https://md.syncpower.jp/authenticate/v1/token
 
 ##HTTPS 用ローカルサーバー（server.js）
 // server.js
@@ -62,3 +62,6 @@ npm install
 # 開発サーバー起動（https 対応）
 
 node server.js
+
+
+
